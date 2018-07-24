@@ -32,18 +32,25 @@ from print_functions_for_lab_checks import *
 
 # Main program function defined below
 def main():
-    # TODO: 1. Define start_time to measure total program runtime by
+    # Done: 1. Define start_time to measure total program runtime by
     # collecting start time
-    start_time = None
+    start_time = time()
 
-    # TODO: 2. Define get_input_args() function to create & retrieve command
+    # Done: 2. Define get_input_args() function to create & retrieve command
     # line arguments
     in_arg = get_input_args()
+    print("Command Line Arguements:\n     dir =", in_arg.dir, "\n     arch =", in_arg.arch, "\n     dogfile =", in_arg.dogfile)
 
     # TODO: 3. Define get_pet_labels() function to create pet image labels by
     # creating a dictionary with key=filename and value=file label to be used
     # to check the accuracy of the classifier function
-    answers_dic = get_pet_labels()
+    answers_dic = get_pet_labels(in_arg.dir)
+
+    print("\nanswers_dic has {} key-value pairs.\nBelow are 10 of them:".format(len(answers_dic)))
+    for i, key in enumerate(answers_dic):
+        if i < 10:
+            print("{} key: {} label:{}".format(i, key, answers_dic[key]))
+
 
     # TODO: 4. Define classify_images() function to create the classifier
     # labels with the classifier function uisng in_arg.arch, comparing the
@@ -65,18 +72,21 @@ def main():
     # incorrect classifications of dogs and breeds if requested.
     print_results()
 
-    # TODO: 1. Define end_time to measure total program runtime
+    # Done: 1. Define end_time to measure total program runtime
     # by collecting end time
-    end_time = None
+    end_time = time()
 
-    # TODO: 1. Define tot_time to computes overall runtime in
+    # Done: 1. Define tot_time to computes overall runtime in
     # seconds & prints it in hh:mm:ss format
-    tot_time = None
-    print("\n** Total Elapsed Runtime:", tot_time)
+    tot_time = end_time - start_time
+    hh = int(tot_time/3600)
+    mm = int(tot_time%3600/60)
+    ss = round(tot_time%3600%60)
+    print("\n** Total Elapsed Runtime:\n {}:{}:{}".format(hh,mm,ss))
 
 
 
-# TODO: 2.-to-7. Define all the function below. Notice that the input
+# Done: 2.-to-7. Define all the function below. Notice that the input
 # paramaters and return values have been left in the function's docstrings.
 # This is to provide guidance for acheiving a solution similar to the
 # instructor provided solution. Feel free to ignore this guidance as long as
@@ -98,10 +108,23 @@ def get_input_args():
     Returns:
      parse_args() -data structure that stores the command line arguments object
     """
-    pass
+    # Creates Argument Parser object named parser
+    parser = argparse.ArgumentParser(description='Retrieve some parameters')
+    #Argument 1:
+    parser.add_argument('--dir', type=str, default='pet_images/',
+                        help='path to use the folder "pet_images"')
+    #Argument 2:
+    parser.add_argument('--arch', type=str, default='vgg',
+                        help='chosen CNN model')
+
+    #Argument 3:
+    parser.add_argument('--dogfile', type=str, default='dognames.txt',
+                        help='text file that contains dognames')
+
+    return parser.parse_args()
 
 
-def get_pet_labels():
+def get_pet_labels(image_dir):
     """
     Creates a dictionary of pet labels based upon the filenames of the image
     files. Reads in pet filenames and extracts the pet image labels from the
@@ -114,7 +137,21 @@ def get_pet_labels():
      petlabels_dic - Dictionary storing image filename (as key) and Pet Image
                      Labels (as value)
     """
-    pass
+    filename_list = listdir(image_dir)
+    petlabels_dic = dict()
+    for file in filename_list:
+        image_name = file.split("_")
+        pet_label = ""
+        for word in image_name:
+            if word.isalpha():
+                pet_label += word.lower() + " "
+        pet_label = pet_label.strip()
+
+        if file not in petlabels_dic:
+            petlabels_dic[file] = pet_label
+        else:
+            print("WARNING: Duplicate files exist in directory", file)
+    return petlabels_dic
 
 
 def classify_images():
