@@ -41,7 +41,7 @@ def main():
     in_arg = get_input_args()
     print("Command Line Arguements:\n     dir =", in_arg.dir, "\n     arch =", in_arg.arch, "\n     dogfile =", in_arg.dogfile)
 
-    # TODO: 3. Define get_pet_labels() function to create pet image labels by
+    # Done: 3. Define get_pet_labels() function to create pet image labels by
     # creating a dictionary with key=filename and value=file label to be used
     # to check the accuracy of the classifier function
     answers_dic = get_pet_labels(in_arg.dir)
@@ -55,7 +55,20 @@ def main():
     # TODO: 4. Define classify_images() function to create the classifier
     # labels with the classifier function uisng in_arg.arch, comparing the
     # labels, and creating a dictionary of results (result_dic)
-    result_dic = classify_images()
+    result_dic = classify_images(in_arg.dir, answers_dic, in_arg.arch)
+    print("\n   MATCH:")
+    n_match = 0
+    n_notmatch = 0
+    for key in result_dic:
+        if result_dic[key][2] == 1:
+            n_match += 1
+            print("Real: {0:<26}   Classifier: {0:<30}".format(result_dic[key][0],result_dic[key][1]))
+
+    print("\n   NOT A MATCH:")
+    for key in result_dic:
+        if result_dic[key][2] == 0:
+            n_notmatch += 1
+            print("Real: {0:<26}   Classifier: {0:<30}".format(result_dic[key][0],result_dic[key][1]))
 
     # TODO: 5. Define adjust_results4_isadog() function to adjust the results
     # dictionary(result_dic) to determine if classifier correctly classified
@@ -154,7 +167,7 @@ def get_pet_labels(image_dir):
     return petlabels_dic
 
 
-def classify_images():
+def classify_images(images_dir, petlabel_dic, model):
     """
     Creates classifier labels with classifier function, compares labels, and
     creates a dictionary containing both labels and comparison of them to be
@@ -179,7 +192,42 @@ def classify_images():
                     idx 2 = 1/0 (int)   where 1 = match between pet image and
                     classifer labels and 0 = no match between labels
     """
-    pass
+    results_dic = dict()
+    for key in petlabel_dic:
+
+        # Runs classifier function to classify the images classifier functions
+        # inputs: path +filename and model, returns model_label
+        # as classifier label
+        model_label = classifier(images_dir+key, model)
+        model_label = model_label.lower().strip()
+
+        # defines truth as pet image label and trys to find it using find()
+        # string function to find it within classifier label(model_label)
+        truth = petlabel_dic[key]
+        found = model_label.find(truth)
+        if found >= 0:
+            if ((found == 0 and len(truth)==len(model_label)) or
+                (((found == 0) or (model_label[found-1] == " ")) and
+                ((found + len(truth) == len(model_label)) or
+                (model_label[found + len(truth): found+len(truth)+1] in
+                (","," "))
+                )
+                )
+                ):
+                # found label as stand-alone term (not within label)
+                if key not in results_dic:
+                    results_dic[key] = [truth, model_label, 1]
+
+            # found within a word/term not in label existing on its own
+            else:
+                if key not in results_dic:
+                    results_dic[key] = [truth, model_label, 0]
+        # if not found set results dictionary with match=0(no)
+        else:
+            if key not in results_dic:
+                results_dic[key] = [truth, model_label, 0]
+
+    return results_dic
 
 
 def adjust_results4_isadog():
